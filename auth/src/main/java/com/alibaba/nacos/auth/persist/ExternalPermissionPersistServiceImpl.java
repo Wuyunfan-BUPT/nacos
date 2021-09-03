@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-package com.alibaba.nacos.config.server.auth;
+package com.alibaba.nacos.auth.persist;
 
-import com.alibaba.nacos.config.server.configuration.ConditionOnExternalStorage;
-import com.alibaba.nacos.config.server.model.Page;
-import com.alibaba.nacos.config.server.service.repository.PaginationHelper;
-import com.alibaba.nacos.config.server.service.repository.extrnal.ExternalStoragePersistServiceImpl;
-import com.alibaba.nacos.config.server.utils.LogUtil;
+import com.alibaba.nacos.auth.configuration.ConditionOnExternalStorage;
+import com.alibaba.nacos.auth.model.Page;
+import com.alibaba.nacos.auth.model.PermissionInfo;
+import com.alibaba.nacos.auth.persist.repository.PaginationHelper;
+import com.alibaba.nacos.auth.persist.repository.externel.ExternalStoragePersistServiceImpl;
+import com.alibaba.nacos.auth.util.LogUtil;
 import com.alibaba.nacos.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static com.alibaba.nacos.config.server.service.repository.RowMapperManager.PERMISSION_ROW_MAPPER;
 
 /**
  * Implemetation of ExternalPermissionPersistServiceImpl.
@@ -42,7 +44,9 @@ import static com.alibaba.nacos.config.server.service.repository.RowMapperManage
  */
 @Conditional(value = ConditionOnExternalStorage.class)
 @Component
-public class ExternalPermissionPersistServiceImpl implements  PermissionPersistService {
+public class ExternalPermissionPersistServiceImpl implements PermissionPersistService {
+    
+    public static final PermissionRowMapper PERMISSION_ROW_MAPPER = new PermissionRowMapper();
     
     @Autowired
     private ExternalStoragePersistServiceImpl persistService;
@@ -88,42 +92,15 @@ public class ExternalPermissionPersistServiceImpl implements  PermissionPersistS
         }
     }
     
-    /**
-     * Execute add permission operation.
-     *
-     * @param role role string value.
-     * @param resource resource string value.
-     * @param action action string value.
-     */
-    @Override
-    public void addPermission(String role, String resource, String action) {
+    public static final class PermissionRowMapper implements RowMapper<PermissionInfo> {
         
-        String sql = "INSERT INTO permissions (role, resource, action) VALUES (?, ?, ?)";
-        
-        try {
-            jt.update(sql, role, resource, action);
-        } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
-            throw e;
-        }
-    }
-    
-    /**
-     * Execute delete permission operation.
-     *
-     * @param role role string value.
-     * @param resource resource string value.
-     * @param action action string value.
-     */
-    @Override
-    public void deletePermission(String role, String resource, String action) {
-        
-        String sql = "DELETE FROM permissions WHERE role=? AND resource=? AND action=?";
-        try {
-            jt.update(sql, role, resource, action);
-        } catch (CannotGetJdbcConnectionException e) {
-            LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
-            throw e;
+        @Override
+        public PermissionInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
+            PermissionInfo info = new PermissionInfo();
+            info.setResource(rs.getString("resource"));
+            info.setAction(rs.getString("action"));
+            info.setRole(rs.getString("role"));
+            return info;
         }
     }
     

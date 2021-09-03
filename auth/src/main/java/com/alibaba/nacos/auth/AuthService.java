@@ -43,7 +43,7 @@ public interface AuthService {
      * @param permission permission to auth.
      * @return Boolean if the user has the resource authority.
      */
-    Boolean authorityAccess(IdentityContext identityContext, Permission permission);
+    Boolean authorityAccess(IdentityContext identityContext, Permission permission) throws AccessException;
     
     /**
      * AuthService Name which for conveniently find AuthService instance.
