@@ -16,7 +16,7 @@
 
 package com.alibaba.nacos.auth;
 
-import com.alibaba.nacos.auth.users.NacosUserDetailsServiceImpl;
+import com.alibaba.nacos.auth.users.AuthNacosUserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,10 +31,10 @@ import org.springframework.stereotype.Component;
  * @author wfnuser
  */
 @Component
-public class CustomAuthenticationProvider implements AuthenticationProvider {
+public class AuthCustomAuthenticationProvider implements AuthenticationProvider {
     
     @Autowired
-    private NacosUserDetailsServiceImpl userDetailsService;
+    private AuthNacosUserDetailsServiceImpl userDetailsService;
     
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {

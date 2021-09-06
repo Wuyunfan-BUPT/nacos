@@ -18,6 +18,7 @@ package com.alibaba.nacos.auth.context;
 
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.auth.common.AuthConfigs;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -25,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class GrpcIdentityContextBuilder implements IdentityContextBuilder<Request> {
+    
+    @Autowired
     AuthConfigs authConfigs = new AuthConfigs();
     /**
      * get identity context from grpc.

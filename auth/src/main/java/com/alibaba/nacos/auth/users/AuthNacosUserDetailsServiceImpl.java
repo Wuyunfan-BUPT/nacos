@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author nkorange
  */
 @Service
-public class NacosUserDetailsServiceImpl implements UserDetailsService {
+public class AuthNacosUserDetailsServiceImpl implements UserDetailsService {
     
     private Map<String, User> userMap = new ConcurrentHashMap<>();
     

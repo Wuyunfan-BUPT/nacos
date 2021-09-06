@@ -18,9 +18,9 @@ package com.alibaba.nacos.auth.persist;
 
 import com.alibaba.nacos.auth.configuration.ConditionOnExternalStorage;
 import com.alibaba.nacos.auth.model.Page;
-import com.alibaba.nacos.auth.model.PermissionInfo;
 import com.alibaba.nacos.auth.persist.repository.PaginationHelper;
-import com.alibaba.nacos.auth.persist.repository.externel.ExternalStoragePersistServiceImpl;
+import com.alibaba.nacos.auth.persist.repository.externel.AuthExternalStoragePersistServiceImpl;
+import com.alibaba.nacos.auth.roles.RoleInfo;
 import com.alibaba.nacos.auth.util.LogUtil;
 import com.alibaba.nacos.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,18 +38,18 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Implemetation of ExternalPermissionPersistServiceImpl.
+ * Implemetation of ExternalRolePersistServiceImpl.
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 @Conditional(value = ConditionOnExternalStorage.class)
 @Component
-public class ExternalPermissionPersistServiceImpl implements PermissionPersistService {
+public class AuthExternalRolePersistServiceImpl implements RolePersistService {
     
-    public static final PermissionRowMapper PERMISSION_ROW_MAPPER = new PermissionRowMapper();
+    public static final RoleInfoRowMapper ROLE_INFO_ROW_MAPPER = new RoleInfoRowMapper();
     
     @Autowired
-    private ExternalStoragePersistServiceImpl persistService;
+    private AuthExternalStoragePersistServiceImpl persistService;
     
     private JdbcTemplate jt;
     
@@ -59,49 +59,39 @@ public class ExternalPermissionPersistServiceImpl implements PermissionPersistSe
     }
     
     @Override
-    public Page<PermissionInfo> getPermissions(String role, int pageNo, int pageSize) {
-        PaginationHelper<PermissionInfo> helper = persistService.createPaginationHelper();
+    public Page<RoleInfo> getRolesByUserName(String username, int pageNo, int pageSize) {
         
-        String sqlCountRows = "SELECT count(*) FROM permissions WHERE ";
-        String sqlFetchRows = "SELECT role,resource,action FROM permissions WHERE ";
-    
-        String where = " role= ? ";
+        PaginationHelper<RoleInfo> helper = persistService.createPaginationHelper();
+
+        String sqlCountRows = "SELECT count(*) FROM roles WHERE ";
+
+        String sqlFetchRows = "SELECT role,username FROM roles WHERE ";
+        
+        String where = " username= ? ";
         List<String> params = new ArrayList<>();
-        if (StringUtils.isNotBlank(role)) {
-            params = Collections.singletonList(role);
+        if (StringUtils.isNotBlank(username)) {
+            params = Collections.singletonList(username);
         } else {
             where = " 1=1 ";
         }
         
         try {
-            Page<PermissionInfo> pageInfo = helper
-                    .fetchPage(sqlCountRows + where, sqlFetchRows + where, params.toArray(), pageNo,
-                            pageSize, PERMISSION_ROW_MAPPER);
-            
-            if (pageInfo == null) {
-                pageInfo = new Page<>();
-                pageInfo.setTotalCount(0);
-                pageInfo.setPageItems(new ArrayList<>());
-            }
-            
-            return pageInfo;
-            
+            return helper.fetchPage(sqlCountRows + where, sqlFetchRows + where, params.toArray(), pageNo, pageSize,
+                    ROLE_INFO_ROW_MAPPER);
         } catch (CannotGetJdbcConnectionException e) {
             LogUtil.FATAL_LOG.error("[db-error] " + e.toString(), e);
             throw e;
         }
     }
     
-    public static final class PermissionRowMapper implements RowMapper<PermissionInfo> {
+    private static final class RoleInfoRowMapper implements RowMapper<RoleInfo> {
         
         @Override
-        public PermissionInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
-            PermissionInfo info = new PermissionInfo();
-            info.setResource(rs.getString("resource"));
-            info.setAction(rs.getString("action"));
-            info.setRole(rs.getString("role"));
-            return info;
+        public RoleInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
+            RoleInfo roleInfo = new RoleInfo();
+            roleInfo.setRole(rs.getString("role"));
+            roleInfo.setUsername(rs.getString("username"));
+            return roleInfo;
         }
     }
-    
 }

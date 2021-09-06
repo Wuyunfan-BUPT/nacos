@@ -33,7 +33,7 @@ import static com.alibaba.nacos.common.utils.CollectionUtils.getOrDefault;
  *
  * @author Nacos
  */
-public class ExternalDataSourceProperties {
+public class AuthExternalDataSourceProperties {
     
     private static final String JDBC_DRIVER_NAME = "com.mysql.cj.jdbc.Driver";
     

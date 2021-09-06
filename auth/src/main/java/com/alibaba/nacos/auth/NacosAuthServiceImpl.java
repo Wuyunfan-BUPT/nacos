@@ -21,7 +21,7 @@ import com.alibaba.nacos.auth.context.IdentityContext;
 import com.alibaba.nacos.auth.exception.AccessException;
 import com.alibaba.nacos.auth.model.NacosUser;
 import com.alibaba.nacos.auth.model.Permission;
-import com.alibaba.nacos.auth.roles.NacosRoleServiceImpl;
+import com.alibaba.nacos.auth.roles.AuthNacosRoleServiceImpl;
 import com.alibaba.nacos.auth.roles.RoleInfo;
 import com.alibaba.nacos.auth.util.Loggers;
 import com.alibaba.nacos.common.utils.StringUtils;
@@ -32,6 +32,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -40,6 +41,7 @@ import java.util.List;
  *
  * @author wuyfee
  */
+@Component
 public class NacosAuthServiceImpl implements AuthService {
     
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -49,13 +51,15 @@ public class NacosAuthServiceImpl implements AuthService {
     private static final String PARAM_PASSWORD = "password";
     
     @Autowired
-    private JwtTokenManager tokenManager;
+    private AuthJwtTokenManager authJwtTokenManager;
     
     @Autowired
     private AuthenticationManager authenticationManager;
     
     @Autowired
-    private NacosRoleServiceImpl roleService;
+    private AuthNacosRoleServiceImpl roleService;
+    
+    private NacosUser user;
     
     @Override
     public Boolean login(IdentityContext identityContext) throws AccessException {
@@ -65,24 +69,24 @@ public class NacosAuthServiceImpl implements AuthService {
         }
         
         try {
-            tokenManager.validateToken(token);
+            authJwtTokenManager.validateToken(token);
         } catch (ExpiredJwtException e) {
             throw new AccessException("token expired!");
         } catch (Exception e) {
             throw new AccessException("token invalid!");
         }
         
-        Authentication authentication = tokenManager.getAuthentication(token);
+        Authentication authentication = authJwtTokenManager.getAuthentication(token);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         
         String username = authentication.getName();
-        NacosUser user = new NacosUser();
+        user = new NacosUser();
         user.setUserName(username);
         user.setToken(token);
         List<RoleInfo> roleInfoList = roleService.getRoles(username);
         if (roleInfoList != null) {
             for (RoleInfo roleInfo : roleInfoList) {
-                if (roleInfo.getRole().equals(NacosRoleServiceImpl.GLOBAL_ADMIN_ROLE)) {
+                if (roleInfo.getRole().equals(AuthNacosRoleServiceImpl.GLOBAL_ADMIN_ROLE)) {
                     user.setGlobalAdmin(true);
                     break;
                 }
@@ -96,10 +100,10 @@ public class NacosAuthServiceImpl implements AuthService {
         
         if (Loggers.AUTH.isDebugEnabled()) {
             Loggers.AUTH.debug("auth permission: {}, user: {}", permission,
-                    (String) identityContext.getParameter(PARAM_USERNAME));
+                    user.getUserName());
         }
         
-        if (!roleService.hasPermission((String) identityContext.getParameter(PARAM_USERNAME), permission)) {
+        if (!roleService.hasPermission(user.getUserName(), permission)) {
             throw new AccessException("authorization failed!");
         }
         return true;
@@ -114,7 +118,7 @@ public class NacosAuthServiceImpl implements AuthService {
      * Get token from header.
      */
     private String resolveToken(IdentityContext identityContext) throws AccessException {
-        String bearerToken = (String) identityContext.getParameter(NacosAuthConfig.AUTHORIZATION_HEADER);
+        String bearerToken = (String) identityContext.getParameter(AuthNacosAuthConfig.AUTHORIZATION_HEADER);
         if (StringUtils.isNotBlank(bearerToken) && bearerToken.startsWith(TOKEN_PREFIX)) {
             return bearerToken.substring(7);
         }
@@ -145,6 +149,10 @@ public class NacosAuthServiceImpl implements AuthService {
             finalName = authenticate.getName();
         }
         
-        return tokenManager.createToken(finalName);
+        return authJwtTokenManager.createToken(finalName);
+    }
+    
+    public NacosUser getNacosUser() {
+        return this.user;
     }
 }

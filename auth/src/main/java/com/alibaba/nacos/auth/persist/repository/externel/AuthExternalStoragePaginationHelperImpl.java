@@ -18,7 +18,7 @@ package com.alibaba.nacos.auth.persist.repository.externel;
 
 import com.alibaba.nacos.auth.model.Page;
 import com.alibaba.nacos.auth.persist.repository.PaginationHelper;
-import com.alibaba.nacos.auth.util.PropertyUtil;
+import com.alibaba.nacos.auth.util.AuthPropertyUtil;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -31,11 +31,11 @@ import java.util.List;
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 
-class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
+class AuthExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
     
     private final JdbcTemplate jdbcTemplate;
     
-    public ExternalStoragePaginationHelperImpl(JdbcTemplate jdbcTemplate) {
+    public AuthExternalStoragePaginationHelperImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
     
@@ -204,7 +204,7 @@ class ExternalStoragePaginationHelperImpl<E> implements PaginationHelper {
     }
     
     private boolean isDerby() {
-        return (EnvUtil.getStandaloneMode() && !PropertyUtil.isUseExternalDB()) || PropertyUtil
+        return (EnvUtil.getStandaloneMode() && !AuthPropertyUtil.isUseExternalDB()) || AuthPropertyUtil
                 .isEmbeddedStorage();
     }
     

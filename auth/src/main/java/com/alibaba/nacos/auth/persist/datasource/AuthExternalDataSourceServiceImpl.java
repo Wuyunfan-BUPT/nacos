@@ -16,7 +16,7 @@
 
 package com.alibaba.nacos.auth.persist.datasource;
 
-import com.alibaba.nacos.auth.util.PropertyUtil;
+import com.alibaba.nacos.auth.util.AuthPropertyUtil;
 import com.alibaba.nacos.common.utils.ConvertUtils;
 import com.alibaba.nacos.common.utils.InternetAddressUtil;
 import com.alibaba.nacos.common.utils.StringUtils;
@@ -40,7 +40,7 @@ import static com.alibaba.nacos.auth.util.LogUtil.FATAL_LOG;
  *
  * @author Nacos
  */
-public class ExternalDataSourceServiceImpl implements DataSourceService {
+public class AuthExternalDataSourceServiceImpl implements DataSourceService {
     
     /**
      * JDBC execute timeout value, unit:second.
@@ -96,7 +96,7 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
         
         // Transaction timeout needs to be distinguished from ordinary operations.
         tjt.setTimeout(TRANSACTION_QUERY_TIMEOUT);
-        if (PropertyUtil.isUseExternalDB()) {
+        if (AuthPropertyUtil.isUseExternalDB()) {
             try {
                 reload();
             } catch (IOException e) {
@@ -116,7 +116,7 @@ public class ExternalDataSourceServiceImpl implements DataSourceService {
     @Override
     public synchronized void reload() throws IOException {
         try {
-            dataSourceList = new ExternalDataSourceProperties()
+            dataSourceList = new AuthExternalDataSourceProperties()
                     .build(EnvUtil.getEnvironment(), (dataSource) -> {
                         JdbcTemplate jdbcTemplate = new JdbcTemplate();
                         jdbcTemplate.setQueryTimeout(queryTimeout);

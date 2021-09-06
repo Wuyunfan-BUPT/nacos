@@ -16,7 +16,7 @@
 
 package com.alibaba.nacos.auth.configuration;
 
-import com.alibaba.nacos.auth.util.PropertyUtil;
+import com.alibaba.nacos.auth.util.AuthPropertyUtil;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
@@ -30,7 +30,7 @@ public class ConditionOnExternalStorage implements Condition {
     
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-        return !PropertyUtil.isEmbeddedStorage();
+        return !AuthPropertyUtil.isEmbeddedStorage();
     }
     
 }

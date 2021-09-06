@@ -16,10 +16,10 @@
 
 package com.alibaba.nacos.auth;
 
-import com.alibaba.nacos.auth.roles.NacosRoleServiceImpl;
+import com.alibaba.nacos.auth.roles.AuthNacosRoleServiceImpl;
 import com.alibaba.nacos.auth.roles.RoleInfo;
 import com.alibaba.nacos.auth.users.NacosUserDetails;
-import com.alibaba.nacos.auth.users.NacosUserDetailsServiceImpl;
+import com.alibaba.nacos.auth.users.AuthNacosUserDetailsServiceImpl;
 import com.alibaba.nacos.auth.users.User;
 import com.alibaba.nacos.auth.util.PasswordEncoderUtil;
 import com.alibaba.nacos.common.utils.CollectionUtils;
@@ -43,7 +43,7 @@ import javax.naming.ldap.LdapContext;
 import java.util.Hashtable;
 import java.util.List;
 
-import static com.alibaba.nacos.auth.roles.NacosRoleServiceImpl.GLOBAL_ADMIN_ROLE;
+import static com.alibaba.nacos.auth.roles.AuthNacosRoleServiceImpl.GLOBAL_ADMIN_ROLE;
 
 /**
  * LDAP auth provider.
@@ -51,9 +51,9 @@ import static com.alibaba.nacos.auth.roles.NacosRoleServiceImpl.GLOBAL_ADMIN_ROL
  * @author zjw
  */
 @Component
-public class LdapAuthenticationProvider implements AuthenticationProvider {
+public class AuthLdapAuthenticationProvider implements AuthenticationProvider {
     
-    private static final Logger LOG = LoggerFactory.getLogger(LdapAuthenticationProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AuthLdapAuthenticationProvider.class);
     
     private static final String FACTORY = "com.sun.jndi.ldap.LdapCtxFactory";
     
@@ -66,10 +66,10 @@ public class LdapAuthenticationProvider implements AuthenticationProvider {
     private static final String DEFAULT_SECURITY_AUTH = "simple";
     
     @Autowired
-    private NacosUserDetailsServiceImpl userDetailsService;
+    private AuthNacosUserDetailsServiceImpl userDetailsService;
     
     @Autowired
-    private NacosRoleServiceImpl nacosRoleService;
+    private AuthNacosRoleServiceImpl nacosRoleService;
     
     @Value(("${nacos.core.auth.ldap.url:ldap://localhost:389}"))
     private String ldapUrl;

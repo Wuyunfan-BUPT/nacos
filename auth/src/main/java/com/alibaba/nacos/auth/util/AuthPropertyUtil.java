@@ -27,7 +27,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  *
  * @author Nacos
  */
-public class PropertyUtil implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+public class AuthPropertyUtil implements ApplicationContextInitializer<ConfigurableApplicationContext> {
     
     private static final Logger LOGGER = LogUtil.DEFAULT_LOG;
     
@@ -107,7 +107,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setNotifyConnectTimeout(int notifyConnectTimeout) {
-        PropertyUtil.notifyConnectTimeout = notifyConnectTimeout;
+        AuthPropertyUtil.notifyConnectTimeout = notifyConnectTimeout;
     }
     
     public static int getNotifySocketTimeout() {
@@ -115,7 +115,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setNotifySocketTimeout(int notifySocketTimeout) {
-        PropertyUtil.notifySocketTimeout = notifySocketTimeout;
+        AuthPropertyUtil.notifySocketTimeout = notifySocketTimeout;
     }
     
     public static int getMaxHealthCheckFailCount() {
@@ -123,7 +123,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setMaxHealthCheckFailCount(int maxHealthCheckFailCount) {
-        PropertyUtil.maxHealthCheckFailCount = maxHealthCheckFailCount;
+        AuthPropertyUtil.maxHealthCheckFailCount = maxHealthCheckFailCount;
     }
     
     public static boolean isHealthCheck() {
@@ -131,7 +131,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setHealthCheck(boolean isHealthCheck) {
-        PropertyUtil.isHealthCheck = isHealthCheck;
+        AuthPropertyUtil.isHealthCheck = isHealthCheck;
     }
     
     public static int getMaxContent() {
@@ -139,7 +139,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setMaxContent(int maxContent) {
-        PropertyUtil.maxContent = maxContent;
+        AuthPropertyUtil.maxContent = maxContent;
     }
     
     public static boolean isManageCapacity() {
@@ -147,7 +147,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setManageCapacity(boolean isManageCapacity) {
-        PropertyUtil.isManageCapacity = isManageCapacity;
+        AuthPropertyUtil.isManageCapacity = isManageCapacity;
     }
     
     public static int getDefaultClusterQuota() {
@@ -155,7 +155,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setDefaultClusterQuota(int defaultClusterQuota) {
-        PropertyUtil.defaultClusterQuota = defaultClusterQuota;
+        AuthPropertyUtil.defaultClusterQuota = defaultClusterQuota;
     }
     
     public static boolean isCapacityLimitCheck() {
@@ -163,7 +163,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setCapacityLimitCheck(boolean isCapacityLimitCheck) {
-        PropertyUtil.isCapacityLimitCheck = isCapacityLimitCheck;
+        AuthPropertyUtil.isCapacityLimitCheck = isCapacityLimitCheck;
     }
     
     public static int getDefaultGroupQuota() {
@@ -171,7 +171,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setDefaultGroupQuota(int defaultGroupQuota) {
-        PropertyUtil.defaultGroupQuota = defaultGroupQuota;
+        AuthPropertyUtil.defaultGroupQuota = defaultGroupQuota;
     }
     
     public static int getDefaultTenantQuota() {
@@ -179,7 +179,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setDefaultTenantQuota(int defaultTenantQuota) {
-        PropertyUtil.defaultTenantQuota = defaultTenantQuota;
+        AuthPropertyUtil.defaultTenantQuota = defaultTenantQuota;
     }
     
     public static int getInitialExpansionPercent() {
@@ -187,7 +187,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setInitialExpansionPercent(int initialExpansionPercent) {
-        PropertyUtil.initialExpansionPercent = initialExpansionPercent;
+        AuthPropertyUtil.initialExpansionPercent = initialExpansionPercent;
     }
     
     public static int getDefaultMaxSize() {
@@ -195,7 +195,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setDefaultMaxSize(int defaultMaxSize) {
-        PropertyUtil.defaultMaxSize = defaultMaxSize;
+        AuthPropertyUtil.defaultMaxSize = defaultMaxSize;
     }
     
     public static int getDefaultMaxAggrCount() {
@@ -203,7 +203,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setDefaultMaxAggrCount(int defaultMaxAggrCount) {
-        PropertyUtil.defaultMaxAggrCount = defaultMaxAggrCount;
+        AuthPropertyUtil.defaultMaxAggrCount = defaultMaxAggrCount;
     }
     
     public static int getDefaultMaxAggrSize() {
@@ -211,7 +211,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setDefaultMaxAggrSize(int defaultMaxAggrSize) {
-        PropertyUtil.defaultMaxAggrSize = defaultMaxAggrSize;
+        AuthPropertyUtil.defaultMaxAggrSize = defaultMaxAggrSize;
     }
     
     public static int getCorrectUsageDelay() {
@@ -219,7 +219,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setCorrectUsageDelay(int correctUsageDelay) {
-        PropertyUtil.correctUsageDelay = correctUsageDelay;
+        AuthPropertyUtil.correctUsageDelay = correctUsageDelay;
     }
     
     public static boolean isStandaloneMode() {
@@ -231,7 +231,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setUseExternalDB(boolean useExternalDB) {
-        PropertyUtil.useExternalDB = useExternalDB;
+        AuthPropertyUtil.useExternalDB = useExternalDB;
     }
     
     public static boolean isEmbeddedStorage() {
@@ -247,7 +247,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
     }
     
     public static void setEmbeddedStorage(boolean embeddedStorage) {
-        PropertyUtil.embeddedStorage = embeddedStorage;
+        AuthPropertyUtil.embeddedStorage = embeddedStorage;
     }
     
     private void loadSetting() {
@@ -282,7 +282,6 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
             // External data sources are used by default in cluster mode
             setUseExternalDB(PropertiesConstant.MYSQL
                     .equalsIgnoreCase(getString(PropertiesConstant.SPRING_DATASOURCE_PLATFORM, "")));
-            
             // must initialize after setUseExternalDB
             // This value is true in stand-alone mode and false in cluster mode
             // If this value is set to true in cluster mode, nacos's distributed storage engine is turned on
@@ -292,9 +291,9 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
                 setEmbeddedStorage(false);
             } else {
                 boolean embeddedStorage =
-                        PropertyUtil.embeddedStorage || Boolean.getBoolean(PropertiesConstant.EMBEDDED_STORAGE);
+                        AuthPropertyUtil.embeddedStorage || Boolean.getBoolean(PropertiesConstant.EMBEDDED_STORAGE);
                 setEmbeddedStorage(embeddedStorage);
-                
+               
                 // If the embedded data source storage is not turned on, it is automatically
                 // upgraded to the external data source storage, as before
                 if (!embeddedStorage) {

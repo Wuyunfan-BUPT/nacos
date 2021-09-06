@@ -16,7 +16,7 @@
 
 package com.alibaba.nacos.auth.persist.datasource;
 
-import com.alibaba.nacos.auth.util.PropertyUtil;
+import com.alibaba.nacos.auth.util.AuthPropertyUtil;
 import org.springframework.stereotype.Component;
 
 /**
@@ -25,15 +25,15 @@ import org.springframework.stereotype.Component;
  * @author Nacos
  */
 @Component
-public class DynamicDataSource {
+public class AuthDynamicDataSource {
     
     private DataSourceService localDataSourceService = null;
     
     private DataSourceService basicDataSourceService = null;
     
-    private static final DynamicDataSource INSTANCE = new DynamicDataSource();
+    private static final AuthDynamicDataSource INSTANCE = new AuthDynamicDataSource();
     
-    public static DynamicDataSource getInstance() {
+    public static AuthDynamicDataSource getInstance() {
         return INSTANCE;
     }
     
@@ -43,7 +43,7 @@ public class DynamicDataSource {
             // Embedded storage is used by default in stand-alone mode
             // In cluster mode, external databases are used by default
             
-            if (PropertyUtil.isEmbeddedStorage()) {
+            if (AuthPropertyUtil.isEmbeddedStorage()) {
                 if (localDataSourceService == null) {
                     localDataSourceService = new LocalDataSourceServiceImpl();
                     localDataSourceService.init();
@@ -51,7 +51,7 @@ public class DynamicDataSource {
                 return localDataSourceService;
             } else {
                 if (basicDataSourceService == null) {
-                    basicDataSourceService = new ExternalDataSourceServiceImpl();
+                    basicDataSourceService = new AuthExternalDataSourceServiceImpl();
                     basicDataSourceService.init();
                 }
                 return basicDataSourceService;

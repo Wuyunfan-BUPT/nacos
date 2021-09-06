@@ -16,10 +16,10 @@
 
 package com.alibaba.nacos.address.auth;
 
-import com.alibaba.nacos.auth.AuthManager;
+import com.alibaba.nacos.auth.AuthService;
+import com.alibaba.nacos.auth.context.IdentityContext;
 import com.alibaba.nacos.auth.exception.AccessException;
 import com.alibaba.nacos.auth.model.Permission;
-import com.alibaba.nacos.auth.model.User;
 
 /**
  * Address server auth manager.
@@ -28,21 +28,20 @@ import com.alibaba.nacos.auth.model.User;
  *
  * @author xiweng.yy
  */
-public class AddressServerAuthManager implements AuthManager {
+public class AddressServerAuthManager implements AuthService {
     
     @Override
-    public User login(Object request) throws AccessException {
-        User result = new User();
-        result.setUserName("nacos");
-        return result;
-    }
-    
-    @Override
-    public User loginRemote(Object request) throws AccessException {
+    public Boolean login(IdentityContext identityContext) throws AccessException {
         return null;
     }
     
     @Override
-    public void auth(Permission permission, User user) throws AccessException {
+    public Boolean authorityAccess(IdentityContext identityContext, Permission permission) throws AccessException {
+        return null;
+    }
+    
+    @Override
+    public String getAuthServiceName() {
+        return null;
     }
 }

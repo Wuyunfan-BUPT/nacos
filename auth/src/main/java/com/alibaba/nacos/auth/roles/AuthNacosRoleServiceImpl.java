@@ -16,14 +16,14 @@
 
 package com.alibaba.nacos.auth.roles;
 
-import com.alibaba.nacos.auth.NacosAuthConfig;
+import com.alibaba.nacos.auth.AuthNacosAuthConfig;
 import com.alibaba.nacos.auth.common.AuthConfigs;
 import com.alibaba.nacos.auth.model.Page;
 import com.alibaba.nacos.auth.model.Permission;
 import com.alibaba.nacos.auth.model.PermissionInfo;
 import com.alibaba.nacos.auth.persist.PermissionPersistService;
 import com.alibaba.nacos.auth.persist.RolePersistService;
-import com.alibaba.nacos.auth.users.NacosUserDetailsServiceImpl;
+import com.alibaba.nacos.auth.users.AuthNacosUserDetailsServiceImpl;
 import com.alibaba.nacos.auth.util.Loggers;
 import com.alibaba.nacos.common.utils.ConcurrentHashSet;
 import com.alibaba.nacos.common.utils.StringUtils;
@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
  * @since 1.2.0
  */
 @Service
-public class NacosRoleServiceImpl {
+public class AuthNacosRoleServiceImpl {
     
     public static final String GLOBAL_ADMIN_ROLE = "ROLE_ADMIN";
     
@@ -59,7 +59,7 @@ public class NacosRoleServiceImpl {
     private RolePersistService rolePersistService;
     
     @Autowired
-    private NacosUserDetailsServiceImpl userDetailsService;
+    private AuthNacosUserDetailsServiceImpl userDetailsService;
     
     @Autowired
     private PermissionPersistService permissionPersistService;
@@ -115,7 +115,7 @@ public class NacosRoleServiceImpl {
      */
     public boolean hasPermission(String username, Permission permission) {
         //update password
-        if (NacosAuthConfig.UPDATE_PASSWORD_ENTRY_POINT.equals(permission.getResource())) {
+        if (AuthNacosAuthConfig.UPDATE_PASSWORD_ENTRY_POINT.equals(permission.getResource())) {
             return true;
         }
 
@@ -132,7 +132,7 @@ public class NacosRoleServiceImpl {
         }
         
         // Old global admin can pass resource 'console/':
-        if (permission.getResource().startsWith(NacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX)) {
+        if (permission.getResource().startsWith(AuthNacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX)) {
             return false;
         }
         

@@ -20,9 +20,10 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.request.RequestMeta;
 import com.alibaba.nacos.api.remote.response.Response;
-import com.alibaba.nacos.auth.AuthManager;
+import com.alibaba.nacos.auth.AuthService;
 import com.alibaba.nacos.auth.annotation.Secured;
 import com.alibaba.nacos.auth.common.AuthConfigs;
+import com.alibaba.nacos.auth.context.GrpcIdentityContextBuilder;
 import com.alibaba.nacos.auth.exception.AccessException;
 import com.alibaba.nacos.auth.model.Permission;
 import com.alibaba.nacos.auth.parser.ResourceParser;
@@ -48,7 +49,7 @@ public class RemoteRequestAuthFilter extends AbstractRequestFilter {
     private AuthConfigs authConfigs;
     
     @Autowired
-    private AuthManager authManager;
+    private AuthService authManager;
     
     @Override
     public Response filter(Request request, RequestMeta meta, Class handlerClazz) throws NacosException {
@@ -63,7 +64,6 @@ public class RemoteRequestAuthFilter extends AbstractRequestFilter {
                 }
                 
                 Secured secured = method.getAnnotation(Secured.class);
-                String action = secured.action().toString();
                 String resource = secured.resource();
                 
                 if (StringUtils.isBlank(resource)) {
@@ -75,8 +75,12 @@ public class RemoteRequestAuthFilter extends AbstractRequestFilter {
                     // deny if we don't find any resource:
                     throw new AccessException("resource name invalid!");
                 }
+    
+                String action = secured.action().toString();
                 
-                authManager.auth(new Permission(resource, action), authManager.loginRemote(request));
+                GrpcIdentityContextBuilder identityContextBuilder = new GrpcIdentityContextBuilder();
+                authManager.login(identityContextBuilder.build(request));
+                authManager.authorityAccess(identityContextBuilder.build(request), new Permission(resource, action));
                 
             }
         } catch (AccessException e) {

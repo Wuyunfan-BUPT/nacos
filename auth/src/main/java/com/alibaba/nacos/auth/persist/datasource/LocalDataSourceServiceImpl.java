@@ -19,8 +19,8 @@ package com.alibaba.nacos.auth.persist.datasource;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.exception.runtime.NacosRuntimeException;
 import com.alibaba.nacos.auth.constant.Constants;
+import com.alibaba.nacos.auth.util.AuthPropertyUtil;
 import com.alibaba.nacos.auth.util.LogUtil;
-import com.alibaba.nacos.auth.util.PropertyUtil;
 import com.alibaba.nacos.common.utils.IoUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.alibaba.nacos.sys.env.EnvUtil;
@@ -74,7 +74,7 @@ public class LocalDataSourceServiceImpl implements DataSourceService {
     @PostConstruct
     @Override
     public synchronized void init() throws Exception {
-        if (PropertyUtil.isUseExternalDB()) {
+        if (AuthPropertyUtil.isUseExternalDB()) {
             return;
         }
         if (!initialize) {

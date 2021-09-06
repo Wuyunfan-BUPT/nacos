@@ -18,8 +18,8 @@ package com.alibaba.nacos.auth;
 
 import com.alibaba.nacos.auth.common.AuthConfigs;
 import com.alibaba.nacos.auth.common.AuthSystemTypes;
-import com.alibaba.nacos.auth.filter.JwtAuthenticationTokenFilter;
-import com.alibaba.nacos.auth.users.NacosUserDetailsServiceImpl;
+import com.alibaba.nacos.auth.filter.AuthJwtAuthenticationTokenFilter;
+import com.alibaba.nacos.auth.users.AuthNacosUserDetailsServiceImpl;
 import com.alibaba.nacos.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -43,7 +43,7 @@ import org.springframework.web.cors.CorsUtils;
  * @author Nacos
  */
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class NacosAuthConfig extends WebSecurityConfigurerAdapter {
+public class AuthNacosAuthConfig extends WebSecurityConfigurerAdapter {
     
     public static final String AUTHORIZATION_HEADER = "Authorization";
     
@@ -62,21 +62,21 @@ public class NacosAuthConfig extends WebSecurityConfigurerAdapter {
     private static final String DEFAULT_ALL_PATH_PATTERN = "/**";
     
     private static final String PROPERTY_IGNORE_URLS = "nacos.security.ignore.urls";
-
+    
     @Autowired
     private Environment env;
     
     @Autowired
-    private JwtTokenManager tokenProvider;
+    private AuthJwtTokenManager tokenProvider;
     
     @Autowired
     private AuthConfigs authConfigs;
     
     @Autowired
-    private NacosUserDetailsServiceImpl userDetailsService;
+    private AuthNacosUserDetailsServiceImpl userDetailsService;
     
     @Autowired
-    private LdapAuthenticationProvider ldapAuthenticationProvider;
+    private AuthLdapAuthenticationProvider ldapAuthenticationProvider;
     
     @Bean(name = BeanIds.AUTHENTICATION_MANAGER)
     @Override
@@ -121,11 +121,11 @@ public class NacosAuthConfig extends WebSecurityConfigurerAdapter {
                     .and().authorizeRequests().requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
                     .antMatchers(LOGIN_ENTRY_POINT).permitAll()
                     .and().authorizeRequests().antMatchers(TOKEN_BASED_AUTH_ENTRY_POINT).authenticated()
-                    .and().exceptionHandling().authenticationEntryPoint(new JwtAuthenticationEntryPoint());
+                    .and().exceptionHandling().authenticationEntryPoint(new AuthJwtAuthenticationEntryPoint());
             // disable cache
             http.headers().cacheControl();
             
-            http.addFilterBefore(new JwtAuthenticationTokenFilter(tokenProvider),
+            http.addFilterBefore(new AuthJwtAuthenticationTokenFilter(tokenProvider),
                     UsernamePasswordAuthenticationFilter.class);
         }
     }
@@ -134,5 +134,4 @@ public class NacosAuthConfig extends WebSecurityConfigurerAdapter {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
 }

@@ -17,8 +17,8 @@
 package com.alibaba.nacos.auth.filter;
 
 import com.alibaba.nacos.api.common.Constants;
-import com.alibaba.nacos.auth.JwtTokenManager;
-import com.alibaba.nacos.auth.NacosAuthConfig;
+import com.alibaba.nacos.auth.AuthJwtTokenManager;
+import com.alibaba.nacos.auth.AuthNacosAuthConfig;
 import com.alibaba.nacos.common.utils.StringUtils;
 
 import org.springframework.security.core.Authentication;
@@ -36,13 +36,13 @@ import java.io.IOException;
  *
  * @author wfnuser
  */
-public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
+public class AuthJwtAuthenticationTokenFilter extends OncePerRequestFilter {
     
     private static final String TOKEN_PREFIX = "Bearer ";
     
-    private final JwtTokenManager tokenManager;
+    private final AuthJwtTokenManager tokenManager;
     
-    public JwtAuthenticationTokenFilter(JwtTokenManager tokenManager) {
+    public AuthJwtAuthenticationTokenFilter(AuthJwtTokenManager tokenManager) {
         this.tokenManager = tokenManager;
     }
     
@@ -64,7 +64,7 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
      * Get token from header.
      */
     private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(NacosAuthConfig.AUTHORIZATION_HEADER);
+        String bearerToken = request.getHeader(AuthNacosAuthConfig.AUTHORIZATION_HEADER);
         if (StringUtils.isNotBlank(bearerToken) && bearerToken.startsWith(TOKEN_PREFIX)) {
             return bearerToken.substring(TOKEN_PREFIX.length());
         }

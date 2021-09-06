@@ -39,7 +39,7 @@ import java.util.List;
  * @author nkorange
  */
 @Component
-public class JwtTokenManager {
+public class AuthJwtTokenManager {
     
     private static final String AUTHORITIES_KEY = "auth";
     

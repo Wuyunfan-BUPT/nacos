@@ -17,22 +17,24 @@
 package com.alibaba.nacos.console.controller;
 
 import com.alibaba.nacos.api.common.Constants;
+import com.alibaba.nacos.auth.AuthJwtTokenManager;
+import com.alibaba.nacos.auth.AuthNacosAuthConfig;
+import com.alibaba.nacos.auth.NacosAuthServiceImpl;
 import com.alibaba.nacos.auth.annotation.Secured;
 import com.alibaba.nacos.auth.common.ActionTypes;
 import com.alibaba.nacos.auth.common.AuthConfigs;
 import com.alibaba.nacos.auth.common.AuthSystemTypes;
+import com.alibaba.nacos.auth.context.HttpIdentityContextBuilder;
 import com.alibaba.nacos.auth.exception.AccessException;
+import com.alibaba.nacos.auth.exception.AuthConfigsException;
 import com.alibaba.nacos.common.model.RestResult;
 import com.alibaba.nacos.common.model.RestResultUtils;
 import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.alibaba.nacos.config.server.auth.RoleInfo;
 import com.alibaba.nacos.config.server.model.User;
 import com.alibaba.nacos.config.server.utils.RequestUtil;
-import com.alibaba.nacos.console.security.nacos.JwtTokenManager;
-import com.alibaba.nacos.console.security.nacos.NacosAuthConfig;
-import com.alibaba.nacos.console.security.nacos.NacosAuthManager;
 import com.alibaba.nacos.console.security.nacos.roles.NacosRoleServiceImpl;
-import com.alibaba.nacos.console.security.nacos.users.NacosUser;
+import com.alibaba.nacos.auth.model.NacosUser;
 import com.alibaba.nacos.console.security.nacos.users.NacosUserDetailsServiceImpl;
 import com.alibaba.nacos.console.utils.PasswordEncoderUtil;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -69,7 +71,7 @@ import java.util.Objects;
 public class UserController {
     
     @Autowired
-    private JwtTokenManager jwtTokenManager;
+    private AuthJwtTokenManager authJwtTokenManager;
     
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -84,7 +86,7 @@ public class UserController {
     private AuthConfigs authConfigs;
     
     @Autowired
-    private NacosAuthManager authManager;
+    private NacosAuthServiceImpl authManager;
     
     /**
      * Create a new user.
@@ -95,7 +97,7 @@ public class UserController {
      * @throws IllegalArgumentException if user already exist
      * @since 1.2.0
      */
-    @Secured(resource = NacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "users", action = ActionTypes.WRITE)
+    @Secured(resource = AuthNacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "users", action = ActionTypes.WRITE)
     @PostMapping
     public Object createUser(@RequestParam String username, @RequestParam String password) {
         
@@ -115,7 +117,7 @@ public class UserController {
      * @since 1.2.0
      */
     @DeleteMapping
-    @Secured(resource = NacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "users", action = ActionTypes.WRITE)
+    @Secured(resource = AuthNacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "users", action = ActionTypes.WRITE)
     public Object deleteUser(@RequestParam String username) {
         List<RoleInfo> roleInfoList = roleService.getRoles(username);
         if (roleInfoList != null) {
@@ -141,7 +143,7 @@ public class UserController {
      * @since 1.2.0
      */
     @PutMapping
-    @Secured(resource = NacosAuthConfig.UPDATE_PASSWORD_ENTRY_POINT, action = ActionTypes.WRITE)
+    @Secured(resource = AuthNacosAuthConfig.UPDATE_PASSWORD_ENTRY_POINT, action = ActionTypes.WRITE)
     public Object updateUser(@RequestParam String username, @RequestParam String newPassword,
             HttpServletResponse response, HttpServletRequest request) throws IOException {
         // admin or same user
@@ -185,7 +187,7 @@ public class UserController {
      * @since 1.2.0
      */
     @GetMapping
-    @Secured(resource = NacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "users", action = ActionTypes.READ)
+    @Secured(resource = AuthNacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "users", action = ActionTypes.READ)
     public Object getUsers(@RequestParam int pageNo, @RequestParam int pageSize) {
         return userDetailsService.getUsersFromDatabase(pageNo, pageSize);
     }
@@ -204,13 +206,15 @@ public class UserController {
      */
     @PostMapping("/login")
     public Object login(@RequestParam String username, @RequestParam String password, HttpServletResponse response,
-            HttpServletRequest request) throws AccessException {
+            HttpServletRequest request) throws AccessException, AuthConfigsException {
         
         if (AuthSystemTypes.NACOS.name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType()) || AuthSystemTypes.LDAP
                 .name().equalsIgnoreCase(authConfigs.getNacosAuthSystemType())) {
-            NacosUser user = (NacosUser) authManager.login(request);
+            HttpIdentityContextBuilder identityContextBuilder = new HttpIdentityContextBuilder(authConfigs);
+            authManager.login(identityContextBuilder.build(request));
+            NacosUser user = authManager.getNacosUser();
             
-            response.addHeader(NacosAuthConfig.AUTHORIZATION_HEADER, NacosAuthConfig.TOKEN_PREFIX + user.getToken());
+            response.addHeader(AuthNacosAuthConfig.AUTHORIZATION_HEADER, AuthNacosAuthConfig.TOKEN_PREFIX + user.getToken());
             
             ObjectNode result = JacksonUtils.createEmptyJsonNode();
             result.put(Constants.ACCESS_TOKEN, user.getToken());
@@ -230,9 +234,9 @@ public class UserController {
             // bind SecurityContext to Authentication
             SecurityContextHolder.getContext().setAuthentication(authentication);
             // generate Token
-            String token = jwtTokenManager.createToken(authentication);
+            String token = authJwtTokenManager.createToken(authentication);
             // write Token to Http header
-            response.addHeader(NacosAuthConfig.AUTHORIZATION_HEADER, "Bearer " + token);
+            response.addHeader(AuthNacosAuthConfig.AUTHORIZATION_HEADER, "Bearer " + token);
             return RestResultUtils.success("Bearer " + token);
         } catch (BadCredentialsException authentication) {
             return RestResultUtils.failed(HttpStatus.UNAUTHORIZED.value(), null, "Login failed");
@@ -275,7 +279,7 @@ public class UserController {
      * @return Matched username
      */
     @GetMapping("/search")
-    @Secured(resource = NacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "users", action = ActionTypes.WRITE)
+    @Secured(resource = AuthNacosAuthConfig.CONSOLE_RESOURCE_NAME_PREFIX + "users", action = ActionTypes.WRITE)
     public List<String> searchUsersLikeUsername(@RequestParam String username) {
         return userDetailsService.findUserLikeUsername(username);
     }
