@@ -32,7 +32,12 @@ jobs:
           echo ${{ github.event.number }} > ./pr/NR
       - name: Print workflow ID
         run: |
-          run: echo "Workflow ID is ${{ github.workflow }}_${{ github.run_id }}"
+          echo "Workflow ID is ${{ github.workflow }}_${{ github.run_id }}"
+      - name: generate run_id markdown
+        run: |
+          echo '<center> WORKFLOW RUN ID </center>' > run_id.md
+          echo ${{ github.run_id }} >> run_id.md
+          cat run_id.md >> $GITHUB_STEP_SUMMARY
       - uses: actions/upload-artifact@v2
         with:
           name: pr
@@ -41,3 +46,4 @@ jobs:
         with:
           name: ${{ github.run_id }}
           path: ./
+
