@@ -30,13 +30,14 @@ jobs:
         run: |
           mkdir -p ./pr
           echo ${{ github.event.number }} > ./pr/NR
-      - name: Print Task ID
+      - name: Print workflow ID
         run: |
-          task_path=${{ github.task_path }}
-          echo "Task ID is ${task_path}"
-          task_id=${task_path##*/}
-          echo "Task ID is $task_id"
+          run: echo "Workflow ID is ${{ github.workflow }}_${{ github.run_id }}"
       - uses: actions/upload-artifact@v2
         with:
           name: pr
           path: pr/
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.run_id }}
+          path: ./
