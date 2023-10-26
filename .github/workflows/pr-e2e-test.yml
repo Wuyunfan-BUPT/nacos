@@ -1,12 +1,11 @@
 name: E2E test for pull request
 
-
 on:
   workflow_run:
     workflows: ["PR-CI"]
     types:
       - completed
-  
+
 env:
   DOCKER_REPO: wuyfeedocker/nacos-ci
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
@@ -100,7 +99,7 @@ jobs:
           printf '%s\n' "${a[@]}" | jq -R . | jq -s .
           echo version-json=`printf '%s\n' "${a[@]}" | jq -R . | jq -s .` >> $GITHUB_OUTPUT
   
-  
+
   deploy:
     if: ${{ success() }}
     name: Deploy nacos
