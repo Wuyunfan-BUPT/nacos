@@ -23,8 +23,8 @@ import com.alibaba.nacos.client.env.NacosClientProperties;
 import com.alibaba.nacos.client.utils.ContextPathUtil;
 import com.alibaba.nacos.client.utils.EnvUtil;
 import com.alibaba.nacos.client.utils.LogUtils;
-import com.alibaba.nacos.client.utils.ParamUtil;
 import com.alibaba.nacos.client.utils.TemplateUtils;
+import com.alibaba.nacos.common.executor.NameThreadFactory;
 import com.alibaba.nacos.common.http.HttpRestResult;
 import com.alibaba.nacos.common.http.client.NacosRestTemplate;
 import com.alibaba.nacos.common.http.param.Header;
@@ -48,6 +48,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import com.alibaba.nacos.client.utils.ParamUtil;
 
 import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTPS_PREFIX;
 import static com.alibaba.nacos.common.constant.RequestUrlConstants.HTTP_PREFIX;
@@ -63,12 +64,8 @@ public class ServerListManager implements Closeable {
     
     private final NacosRestTemplate nacosRestTemplate = ConfigHttpClientManager.getInstance().getNacosRestTemplate();
     
-    private final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1, r -> {
-        Thread t = new Thread(r);
-        t.setName("com.alibaba.nacos.client.ServerListManager");
-        t.setDaemon(true);
-        return t;
-    });
+    private final ScheduledExecutorService executorService =
+            new ScheduledThreadPoolExecutor(1, new NameThreadFactory("com.alibaba.nacos.client.ServerListManager"));
     
     /**
      * The name of the different environment.
@@ -323,6 +320,9 @@ public class ServerListManager implements Closeable {
         GetServerListTask getServersTask = new GetServerListTask(addressServerUrl);
         for (int i = 0; i < initServerlistRetryTimes && serverUrls.isEmpty(); ++i) {
             getServersTask.run();
+            if (!serverUrls.isEmpty()) {
+                break;
+            }
             try {
                 this.wait((i + 1) * 100L);
             } catch (Exception e) {
@@ -408,8 +408,8 @@ public class ServerListManager implements Closeable {
         currentServerAddr = iterator.next();
         
         // Using unified event processor, NotifyCenter
-        NotifyCenter.publishEvent(new ServerlistChangeEvent());
-        LOGGER.info("[{}] [update-serverlist] serverlist updated to {}", name, serverUrls);
+        NotifyCenter.publishEvent(new ServerListChangeEvent());
+        LOGGER.info("[{}] [update-serverList] serverList updated to {}", name, serverUrls);
     }
     
     private List<String> getApacheServerList(String url, String name) {
