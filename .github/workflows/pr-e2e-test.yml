@@ -57,8 +57,9 @@ jobs:
           cp -r nacos-* nacos/
       - uses: actions/checkout@v3
         with:
-          repository: nacos-group/nacos-e2e.git
-          ref: main
+          # repository: nacos-group/nacos-e2e.git
+          repository: Wuyunfan-BUPT/nacos-e2e.git
+          ref: fix-centos-repo-error
           path: nacos-e2e
       - name: Generate image tag
         id: build-images
@@ -588,11 +589,11 @@ jobs:
 
 
   clean:
-    if: always()
+    if: ${{ always() }}
     name: Clean
     needs: [docker, e2e-java-test, e2e-go-test, e2e-cpp-test, e2e-csharp-test, e2e-nodejs-test, e2e-python-test, deploy_auth, e2e-java-auth-test]
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
