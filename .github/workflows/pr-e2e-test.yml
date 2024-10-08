@@ -637,9 +637,9 @@ jobs:
           markdown_content="${jobs_status}"
           generate_content() {
              if [ $1 = "success" ];then
-               echo "\n - [x] $2  $1 "
+               echo "\n ✅ $2  $1 "
              else
-               echo "\n - [ ] $2  $1 "
+               echo "\n ❌ $2  $1 "
              fi
           }
           markdown_content+=$(generate_content ${{ needs.docker.result }} "- docker: ")
