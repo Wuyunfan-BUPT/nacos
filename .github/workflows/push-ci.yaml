@@ -124,6 +124,7 @@ jobs:
       DATABASE: mysql
       NODE_PORT: 30000
       AUTH_ENABLED: false
+      ACTUAL_MODE: cluster
     strategy:
       fail-fast: false
       matrix:
@@ -140,6 +141,7 @@ jobs:
             if [[ ${{ matrix.mode }} = "standalone_auth" ]]; then
               echo "AUTH_ENABLED=true" >> $GITHUB_ENV
             fi
+            echo "ACTUAL_MODE=standalone" >> $GITHUB_ENV
             echo "REPLICA_COUNT=1" >> $GITHUB_ENV
             echo "DATABASE=embedded" >> $GITHUB_ENV
             echo ${{ strategy.mode }}-nacos-${{ github.run_id }}-${{ strategy.job-index }}
@@ -171,7 +173,7 @@ jobs:
               values:
                 namespace: nacos-${{ github.run_id }}-${{ strategy.job-index }}
                 global:
-                  mode: ${{ matrix.mode }}
+                  mode: ${{ env.ACTUAL_MODE }}
                 nacos:
                   replicaCount: ${{ env.REPLICA_COUNT }}
                   image:
