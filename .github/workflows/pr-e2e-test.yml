@@ -199,7 +199,7 @@ jobs:
         with:
           yamlString: |
             action: deploy
-            namespace: nacos-${{ github.run_id }}-9
+            namespace: nacos-${{ github.run_id }}-2
             askConfig: ${{ secrets.ASK_CONFIG_VIRGINA }}
             waitTimes: 2000
             velaAppDescription: nacos-${{ env.GITHUB_WORKFLOW }}-${{ github.run_id }}@${{ matrix.version }}
@@ -212,7 +212,7 @@ jobs:
               retries: 3
               url: https://ghproxy.com/https://github.com/nacos-group/nacos-e2e.git
               values:
-                namespace: nacos-${{ github.run_id }}-9
+                namespace: nacos-${{ github.run_id }}-2
                 global:
                   mode: standalone
                 nacos:
@@ -220,6 +220,8 @@ jobs:
                   image:
                     repository: ${{ env.DOCKER_REPO_ACTUAL }}
                     tag: ${{ matrix.version }}
+                  auth:
+                    enabled: true
                   storage:
                     type: embedded
                 service:
@@ -241,7 +243,7 @@ jobs:
         with:
           yamlString: |
             action: test
-            namespace: nacos-${{ github.run_id }}-9
+            namespace: nacos-${{ github.run_id }}-2
             askConfig: ${{ secrets.ASK_CONFIG_VIRGINA }}
             API_VERSION: v1
             KIND: Pod
@@ -610,7 +612,7 @@ jobs:
   write-comment:
     if: ${{ always() }}
     name: write comment to pr
-    needs: [docker, deploy, e2e-java-test, e2e-go-test, e2e-cpp-test, e2e-csharp-test, e2e-nodejs-test, e2e-python-test, clean]
+    needs: [docker, deploy, e2e-java-test, e2e-go-test, e2e-cpp-test, e2e-csharp-test, e2e-nodejs-test, e2e-python-test, clean, deploy_auth, e2e-java-auth-test]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -643,13 +645,15 @@ jobs:
              fi
           }
           markdown_content+=$(generate_content ${{ needs.docker.result }} "- docker: ")
-          markdown_content+=$(generate_content ${{ needs.deploy.result }} "- deploy: ")
-          markdown_content+=$(generate_content ${{ needs.e2e-java-test.result }} "- e2e-java-test: ")
-          markdown_content+=$(generate_content ${{ needs.e2e-go-test.result }} "- e2e-go-test: ")
-          markdown_content+=$(generate_content ${{ needs.e2e-cpp-test.result }} "- e2e-cpp-test: ")
-          markdown_content+=$(generate_content ${{ needs.e2e-csharp-test.result }} "- e2e-csharp-test: ")
-          markdown_content+=$(generate_content ${{ needs.e2e-nodejs-test.result }} "- e2e-nodejs-test: ")
-          markdown_content+=$(generate_content ${{ needs.e2e-python-test.result }} "- e2e-python-test: ")
+          markdown_content+=$(generate_content ${{ needs.deploy_auth.result }} "- deploy_auth(standalone): ")
+          markdown_content+=$(generate_content ${{ needs.deploy.result }} "- deploy(standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-java-auth-test.result }} "- e2e-java-auth-test(standalone): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-java-test.result }} "- e2e-java-test(standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-go-test.result }} "- e2e-go-test(standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-cpp-test.result }} "- e2e-cpp-test(standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-csharp-test.result }} "- e2e-csharp-test(standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-nodejs-test.result }} "- e2e-nodejs-test(standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-python-test.result }} "- e2e-python-test(standalone & cluster): ")
           markdown_content+=$(generate_content ${{ needs.clean.result }} "- clean: ")
           echo "markdown_content: \n ${markdown_content}"
           payload=`echo "{\"body\": \"${markdown_content}\"}" | jq .`
