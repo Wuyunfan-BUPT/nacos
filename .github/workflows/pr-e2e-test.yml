@@ -331,7 +331,6 @@ jobs:
               RESOURCE_REQUIRE:
                 cpu: 2
                 memory: 2Gi
-
       - uses: actions/upload-artifact@v3
         if: always()
         name: Upload test log
@@ -662,16 +661,14 @@ jobs:
              fi
           }
           markdown_content+=$(generate_content ${{ needs.docker.result }} "- docker: ")
-          markdown_content+=$(generate_content ${{ needs.deploy_auth.result }} "- deploy_auth(standalone): ")
-          markdown_content+=$(generate_content ${{ needs.deploy.result }} "- deploy(standalone & cluster): ")
-          markdown_content+=$(generate_content ${{ needs.e2e-java-auth-test.result }} "- e2e-java-auth-test(standalone): ")
-          markdown_content+=$(generate_content ${{ needs.e2e-java-test.result }} "- e2e-java-test(standalone & cluster): ")
-          markdown_content+=$(generate_content ${{ needs.e2e-go-test.result }} "- e2e-go-test(standalone & cluster): ")
-          markdown_content+=$(generate_content ${{ needs.e2e-cpp-test.result }} "- e2e-cpp-test(standalone & cluster): ")
-          markdown_content+=$(generate_content ${{ needs.e2e-csharp-test.result }} "- e2e-csharp-test(standalone & cluster): ")
-          markdown_content+=$(generate_content ${{ needs.e2e-nodejs-test.result }} "- e2e-nodejs-test(standalone & cluster): ")
-          markdown_content+=$(generate_content ${{ needs.e2e-python-test.result }} "- e2e-python-test(standalone & cluster): ")
-          markdown_content+=$(generate_content ${{ needs.clean.result }} "- clean: ")
+          markdown_content+=$(generate_content ${{ needs.deploy.result }} "- deploy (standalone & cluster & standalone_auth): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-java-test.result }} "- e2e-java-test (standalone & cluster & standalone_auth): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-go-test.result }} "- e2e-go-test (standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-cpp-test.result }} "- e2e-cpp-test (standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-csharp-test.result }} "- e2e-csharp-test (standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-nodejs-test.result }} "- e2e-nodejs-test (standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.e2e-python-test.result }} "- e2e-python-test (standalone & cluster): ")
+          markdown_content+=$(generate_content ${{ needs.clean.result }} "- clean (standalone & cluster & standalone_auth): ")
           echo "markdown_content: \n ${markdown_content}"
           payload=`echo "{\"body\": \"${markdown_content}\"}" | jq .`
           curl -L -X DELETE ${{ env.HEADER_PARAMS }} ${{ env.BASE_URL }}/actions/variables/VAR_${{ github.event.workflow_run.id }}
