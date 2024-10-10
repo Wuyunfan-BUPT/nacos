@@ -135,7 +135,6 @@ jobs:
         run: |
           echo "NODE_PORT=$(expr $(expr $(expr $(expr ${{ strategy.job-index }} + 1) * ${{ github.run_number }}) % 30000) + 30000)" >> $GITHUB_ENV
       - name: set params values
-#        if: ${{ matrix.mode == 'standalone'* }}
         run: |
           if [[ ${{ matrix.mode }} == "standalone"* ]];then
             if [[ ${{ matrix.mode }} = "standalone_auth" ]]; then
@@ -144,7 +143,7 @@ jobs:
             echo "ACTUAL_MODE=standalone" >> $GITHUB_ENV
             echo "REPLICA_COUNT=1" >> $GITHUB_ENV
             echo "DATABASE=embedded" >> $GITHUB_ENV
-            echo ${{ strategy.mode }}-nacos-${{ github.run_id }}-${{ strategy.job-index }}
+            echo ${{ matrix.mode }}-nacos-${{ github.run_id }}-${{ strategy.job-index }}
           fi
       - name: allocate docker repo
         run: |
@@ -191,110 +190,6 @@ jobs:
                 service:
                   nodePort: ${{ env.NODE_PORT }}
                   type: ClusterIP
-#  deploy_auth:
-#    if: ${{ success() }}
-#    name: Deploy nacos_auth
-#    needs: [docker]
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 60
-#    env:
-#      NODE_PORT: 30000
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        version: ${{ fromJSON(needs.docker.outputs.version-json) }}
-#    steps:
-#      - name: set nodeport
-#        run: |
-#          echo "NODE_PORT=$(expr $(expr $(expr 3 * ${{ github.run_number }}) % 30000) + 30000)" >> $GITHUB_ENV
-#      - name: allocate docker repo
-#        run: |
-#          if [[ $(expr ${{ github.run_id }}  % 2 ) -eq 1 ]]; then
-#            echo "DOCKER_REPO_ACTUAL=${{ env.DOCKER_REPO }}" >> $GITHUB_ENV
-#          else
-#            echo "DOCKER_REPO_ACTUAL=${{ env.DOCKER_REPO_B }}" >> $GITHUB_ENV
-#          fi
-#      - uses: apache/rocketmq-test-tool@java-dev
-#        name: Deploy nacos
-#        with:
-#          yamlString: |
-#            action: deploy
-#            namespace: nacos-${{ github.run_id }}-2
-#            askConfig: ${{ secrets.ASK_CONFIG_VIRGINA }}
-#            waitTimes: 2000
-#            velaAppDescription: nacos-${{ env.GITHUB_WORKFLOW }}-${{ github.run_id }}@${{ matrix.version }}
-#            repoName: nacos
-#            helm:
-#              chart: ./cicd/helm
-#              git:
-#                branch: main
-#              repoType: git
-#              retries: 3
-#              url: https://ghproxy.com/https://github.com/nacos-group/nacos-e2e.git
-#              values:
-#                namespace: nacos-${{ github.run_id }}-2
-#                global:
-#                  mode: standalone
-#                nacos:
-#                  replicaCount: 1
-#                  image:
-#                    repository: ${{ env.DOCKER_REPO_ACTUAL }}
-#                    tag: ${{ matrix.version }}
-#                  auth:
-#                    enabled: true
-#                  storage:
-#                    type: embedded
-#                service:
-#                  nodePort: ${{ env.NODE_PORT }}
-#                  type: ClusterIP
-#
-#
-#  e2e-java-auth-test:
-#    if: ${{ success() }}
-#    name: Java e2e Auth Test
-#    needs: [docker, deploy_auth]
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 60
-#    strategy:
-#      fail-fast: false
-#    steps:
-#      - uses: apache/rocketmq-test-tool@java-dev
-#        name: java e2e auth test
-#        with:
-#          yamlString: |
-#            action: test
-#            namespace: nacos-${{ github.run_id }}-2
-#            askConfig: ${{ secrets.ASK_CONFIG_VIRGINA }}
-#            API_VERSION: v1
-#            KIND: Pod
-#            RESTART_POLICY: Never
-#            ENV:
-#              WAIT_TIME: 900
-#              REPO_NAME: ${{ env.TEST_REPO_NAME }}
-#              CODE: https://github.com/${{ env.TEST_REPO_NAME }}
-#              BRANCH: main
-#              CODE_PATH: java/auth
-#              CMD: mvn clean test -B
-#              ALL_IP: null
-#            CONTAINER:
-#              IMAGE: cloudnativeofalibabacloud/test-runner:v0.0.4
-#              RESOURCE_LIMITS:
-#                cpu: 2
-#                memory: 2Gi
-#              RESOURCE_REQUIRE:
-#                cpu: 2
-#                memory: 2Gi
-#
-#      - uses: actions/upload-artifact@v3
-#        if: always()
-#        name: Upload test log
-#        with:
-#          name: testlog-${{ matrix.mode }}-java-auth.txt
-#          path: testlog.txt
-#      - name: add markdown
-#        if: always()
-#        run: |
-#          cat result.md >> $GITHUB_STEP_SUMMARY
 
   e2e-java-test:
     if: ${{ success() }}
