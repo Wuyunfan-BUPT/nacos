@@ -135,6 +135,7 @@ jobs:
             echo "REPLICA_COUNT=1" >> $GITHUB_ENV
             echo "DATABASE=embedded" >> $GITHUB_ENV
             echo ${{ matrix.mode }}-nacos-${{ github.run_id }}-${{ strategy.job-index }}
+          fi
       - name: allocate docker repo
         run: |
           if [[ $(expr $(expr ${{ github.run_id }} + ${{ strategy.job-index }} ) % 2 ) -eq 1 ]]; then
