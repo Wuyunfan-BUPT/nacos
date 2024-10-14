@@ -330,6 +330,7 @@ jobs:
               BRANCH: main
               CODE_PATH: cpp
               CMD: |
+                yum-config-manager remove centos-sclo-rh
                 cd /root/code/cpp && make install
                 echo "export LD_LIBRARY_PATH=/usr/local/lib" >> ~/.bashrc  && source ~/.bashrc
                 cd /root/code/cpp/nacoscpptest
