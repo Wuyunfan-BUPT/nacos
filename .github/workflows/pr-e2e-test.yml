@@ -525,7 +525,6 @@ jobs:
   write-comment:
     if: ${{ always() }}
     name: write comment to pr
-#    needs: [docker, deploy, e2e-java-test, e2e-go-test, e2e-cpp-test, e2e-csharp-test, e2e-nodejs-test, e2e-python-test, clean]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -552,10 +551,8 @@ jobs:
             fs.writeFileSync('${{github.workspace}}/pr.zip', Buffer.from(download.data));
       - name: unzip pr
         run: |
-          ls
           unzip pr.zip
           cat pr.txt
-          ls pr
           pr_number=`cat pr.txt`
           echo "PR_NUMBER=${pr_number}" >> $GITHUB_ENV
           echo ${{ env.PR_NUMBER }}
