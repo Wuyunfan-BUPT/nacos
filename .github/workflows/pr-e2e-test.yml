@@ -529,8 +529,38 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: 'Download artifact'
+        uses: actions/github-script@v3.1.0
+        with:
+          script: |
+            var artifacts = await github.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: ${{ github.event.workflow_run.id }},
+            });
+            
+            var matchArtifactNR = artifacts.data.artifacts.filter((artifact) => {
+               return artifact.name == "NR"
+            })[0];
+            var download = await github.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifactNR.id,
+               archive_format: 'zip',
+            });
+            var fs = require('fs');
+            fs.writeFileSync('${{github.workspace}}/NR.zip', Buffer.from(download.data));
+      - run: |
+          unzip NR.zip
+          ls
+          cat NR
+          cat pr/NR
+          pr_number=`cat NR`
+          echo "PR_NUMBER=${pr_number}" >> $GITHUB_ENV
+          echo ${{ env.PR_NUMBER }}
       - name: write issue comment
         run: |
+          echo ${{ env.PR_NUMBER }}
           number=''
           count=10
           while [[ "${number}" == "" && ${count} -gt 0 ]]
