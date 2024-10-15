@@ -561,15 +561,16 @@ jobs:
       - name: write issue comment
         run: |
           echo ${{ env.PR_NUMBER }}
-          number=''
-          count=10
-          while [[ "${number}" == "" && ${count} -gt 0 ]]
-          do
-            sleep 3
-            let "count--"
-            number=`curl -L ${{ env.HEADER_PARAMS }} ${{ env.BASE_URL_ROBOT }}/actions/variables | jq -r '.variables[]? | select(.name == "VAR_${{ github.event.workflow_run.id }}") | .value'`
-            echo "number=${number}"
-          done
+#          number= ''
+#          count=10
+#          while [[ "${number}" == "" && ${count} -gt 0 ]]
+#          do
+#            sleep 3
+#            let "count--"
+#            number=`curl -L ${{ env.HEADER_PARAMS }} ${{ env.BASE_URL_ROBOT }}/actions/variables | jq -r '.variables[]? | select(.name == "VAR_${{ github.event.workflow_run.id }}") | .value'`
+#            echo "number=${number}"
+#          done
+          number=${{ env.PR_NUMBER }}
           job_status=""
           if [ ${{ needs.docker.result }} = 'success' ]  && [ ${{ needs.deploy.result }} = 'success' ] && [ ${{ needs.e2e-java-test.result }} = 'success' ] && [ ${{ needs.e2e-go-test.result }} = 'success' ] && [ ${{ needs.e2e-cpp-test.result }} = 'success' ] && [ ${{ needs.e2e-csharp-test.result }} = 'success' ] && [ ${{ needs.e2e-nodejs-test.result }} = 'success' ] && [ ${{ needs.e2e-python-test.result }} = 'success' ]; then
             jobs_status='$\\color{green}{SUCCESS}$'
@@ -598,5 +599,5 @@ jobs:
           markdown_content+=$(generate_content ${{ needs.clean.result }} "- clean (standalone & cluster & standalone_auth): ")
           echo "markdown_content: \n ${markdown_content}"
           payload=`echo "{\"body\": \"${markdown_content}\"}" | jq .`
-          curl -L -X DELETE ${{ env.HEADER_PARAMS }} ${{ env.BASE_URL_ROBOT }}/actions/variables/VAR_${{ github.event.workflow_run.id }}
+#          curl -L -X DELETE ${{ env.HEADER_PARAMS }} ${{ env.BASE_URL_ROBOT }}/actions/variables/VAR_${{ github.event.workflow_run.id }}
           curl -L -X POST ${{ env.HEADER_PARAMS_WRITE_COMMENT }} ${{ env.BASE_URL_NACOS }}/issues/${number}/comments -d "${payload}"
