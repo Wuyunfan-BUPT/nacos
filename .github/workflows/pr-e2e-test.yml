@@ -539,23 +539,23 @@ jobs:
                run_id: ${{ github.event.workflow_run.id }},
             });
             
-            var matchArtifactNR = artifacts.data.artifacts.filter((artifact) => {
-               return artifact.name == "NR"
+            var matchArtifactPR = artifacts.data.artifacts.filter((artifact) => {
+               return artifact.name == "pr"
             })[0];
             var download = await github.actions.downloadArtifact({
                owner: context.repo.owner,
                repo: context.repo.repo,
-               artifact_id: matchArtifactNR.id,
-               archive_format: 'zip',
+               artifact_id: matchArtifactPR.id,
+               archive_format: 'txt',
             });
             var fs = require('fs');
-            fs.writeFileSync('${{github.workspace}}/NR.zip', Buffer.from(download.data));
+            fs.writeFileSync('${{github.workspace}}/pr.txt', Buffer.from(download.data));
       - run: |
-          unzip NR.zip
           ls
-          cat NR
-          cat pr/NR
-          pr_number=`cat NR`
+          cat pr.txt
+          unzip pr.zip
+          ls pr
+          pr_number=`cat pr.txt`
           echo "PR_NUMBER=${pr_number}" >> $GITHUB_ENV
           echo ${{ env.PR_NUMBER }}
       - name: write issue comment

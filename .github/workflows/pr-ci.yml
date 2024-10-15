@@ -29,11 +29,12 @@ jobs:
       - name: Save PR number
         run: |
           mkdir -p ./pr
-          echo ${{ github.event.pull_request.number }} > ./pr/NR
+          echo ${{ github.event.pull_request.number }} > ./pr/pr.txt
       - uses: actions/upload-artifact@v3
+        name: Upload PR number
         with:
           name: pr
-          path: pr/
+          path: pr/pr.txt
       - name: generate temp variables
         run: |
           echo VAR_${{ github.run_id }}: ${{ github.event.pull_request.number }}
