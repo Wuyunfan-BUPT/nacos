@@ -561,15 +561,6 @@ jobs:
       - name: write issue comment
         run: |
           echo ${{ env.PR_NUMBER }}
-#          number= ''
-#          count=10
-#          while [[ "${number}" == "" && ${count} -gt 0 ]]
-#          do
-#            sleep 3
-#            let "count--"
-#            number=`curl -L ${{ env.HEADER_PARAMS }} ${{ env.BASE_URL_ROBOT }}/actions/variables | jq -r '.variables[]? | select(.name == "VAR_${{ github.event.workflow_run.id }}") | .value'`
-#            echo "number=${number}"
-#          done
           number=${{ env.PR_NUMBER }}
           job_status=""
           if [ ${{ needs.docker.result }} = 'success' ]  && [ ${{ needs.deploy.result }} = 'success' ] && [ ${{ needs.e2e-java-test.result }} = 'success' ] && [ ${{ needs.e2e-go-test.result }} = 'success' ] && [ ${{ needs.e2e-cpp-test.result }} = 'success' ] && [ ${{ needs.e2e-csharp-test.result }} = 'success' ] && [ ${{ needs.e2e-nodejs-test.result }} = 'success' ] && [ ${{ needs.e2e-python-test.result }} = 'success' ]; then
