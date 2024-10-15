@@ -558,7 +558,6 @@ jobs:
           ls pr
           pr_number=`cat pr.txt`
           echo "PR_NUMBER=${pr_number}" >> $GITHUB_ENV
-          echo ${{ env.PR_NUMBER }}
       - name: write issue comment
         run: |
           echo ${{ env.PR_NUMBER }}
