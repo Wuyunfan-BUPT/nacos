@@ -550,7 +550,8 @@ jobs:
             });
             var fs = require('fs');
             fs.writeFileSync('${{github.workspace}}/pr.zip', Buffer.from(download.data));
-      - run: |
+      - name: unzip pr
+        run: |
           ls
           unzip pr.zip
           cat pr.txt
@@ -590,5 +591,4 @@ jobs:
           markdown_content+=$(generate_content ${{ needs.clean.result }} "- clean (standalone & cluster & standalone_auth): ")
           echo "markdown_content: \n ${markdown_content}"
           payload=`echo "{\"body\": \"${markdown_content}\"}" | jq .`
-#          curl -L -X DELETE ${{ env.HEADER_PARAMS }} ${{ env.BASE_URL_ROBOT }}/actions/variables/VAR_${{ github.event.workflow_run.id }}
           curl -L -X POST ${{ env.HEADER_PARAMS_WRITE_COMMENT }} ${{ env.BASE_URL_NACOS }}/issues/${number}/comments -d "${payload}"
