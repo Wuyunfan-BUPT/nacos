@@ -560,7 +560,6 @@ jobs:
       - name: write issue comment
         run: |
           echo ${{ env.PR_NUMBER }}
-          number=${{ env.PR_NUMBER }}
           job_status=""
           if [ ${{ needs.docker.result }} = 'success' ]  && [ ${{ needs.deploy.result }} = 'success' ] && [ ${{ needs.e2e-java-test.result }} = 'success' ] && [ ${{ needs.e2e-go-test.result }} = 'success' ] && [ ${{ needs.e2e-cpp-test.result }} = 'success' ] && [ ${{ needs.e2e-csharp-test.result }} = 'success' ] && [ ${{ needs.e2e-nodejs-test.result }} = 'success' ] && [ ${{ needs.e2e-python-test.result }} = 'success' ]; then
             jobs_status='$\\color{green}{SUCCESS}$'
