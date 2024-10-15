@@ -546,14 +546,14 @@ jobs:
                owner: context.repo.owner,
                repo: context.repo.repo,
                artifact_id: matchArtifactPR.id,
-               archive_format: 'txt',
+               archive_format: 'zip',
             });
             var fs = require('fs');
-            fs.writeFileSync('${{github.workspace}}/pr.txt', Buffer.from(download.data));
+            fs.writeFileSync('${{github.workspace}}/pr.zip', Buffer.from(download.data));
       - run: |
           ls
-          cat pr.txt
           unzip pr.zip
+          cat pr.txt
           ls pr
           pr_number=`cat pr.txt`
           echo "PR_NUMBER=${pr_number}" >> $GITHUB_ENV
