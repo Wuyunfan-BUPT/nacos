@@ -524,6 +524,7 @@ jobs:
   write-comment:
     if: ${{ always() }}
     name: write comment to pr
+    needs: [docker, deploy, e2e-java-test, e2e-go-test, e2e-cpp-test, e2e-csharp-test, e2e-nodejs-test, e2e-python-test, clean]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
