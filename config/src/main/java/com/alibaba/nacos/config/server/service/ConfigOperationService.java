@@ -22,10 +22,12 @@ import com.alibaba.nacos.api.model.v2.ErrorCode;
 import com.alibaba.nacos.common.utils.MapUtil;
 import com.alibaba.nacos.common.utils.NumberUtils;
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.alibaba.nacos.config.server.exception.ConfigAlreadyExistsException;
 import com.alibaba.nacos.config.server.model.ConfigInfo;
 import com.alibaba.nacos.config.server.model.ConfigOperateResult;
 import com.alibaba.nacos.config.server.model.ConfigRequestInfo;
 import com.alibaba.nacos.config.server.model.event.ConfigDataChangeEvent;
+import com.alibaba.nacos.config.server.model.event.IstioConfigChangeEvent;
 import com.alibaba.nacos.config.server.model.form.ConfigForm;
 import com.alibaba.nacos.config.server.model.gray.BetaGrayRule;
 import com.alibaba.nacos.config.server.model.gray.ConfigGrayPersistInfo;
@@ -35,12 +37,14 @@ import com.alibaba.nacos.config.server.model.gray.TagGrayRule;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoGrayPersistService;
 import com.alibaba.nacos.config.server.service.repository.ConfigInfoPersistService;
 import com.alibaba.nacos.config.server.service.trace.ConfigTraceService;
+import com.alibaba.nacos.config.server.utils.ConfigTagUtil;
 import com.alibaba.nacos.config.server.utils.ParamUtils;
 import com.alibaba.nacos.config.server.utils.TimeUtils;
 import com.alibaba.nacos.sys.env.EnvUtil;
 import com.alibaba.nacos.sys.utils.InetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -63,16 +67,16 @@ public class ConfigOperationService {
     
     private ConfigInfoGrayPersistService configInfoGrayPersistService;
     
-    private ConfigGrayModelMigrateService configGrayModelMigrateService;
+    private ConfigMigrateService configMigrateService;
     
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigOperationService.class);
     
     public ConfigOperationService(ConfigInfoPersistService configInfoPersistService,
             ConfigInfoGrayPersistService configInfoGrayPersistService,
-            ConfigGrayModelMigrateService configGrayModelMigrateService) {
+            ConfigMigrateService configMigrateService) {
         this.configInfoPersistService = configInfoPersistService;
         this.configInfoGrayPersistService = configInfoGrayPersistService;
-        this.configGrayModelMigrateService = configGrayModelMigrateService;
+        this.configMigrateService = configMigrateService;
     }
     
     /**
@@ -80,9 +84,8 @@ public class ConfigOperationService {
      *
      * @throws NacosException NacosException.
      */
-    public Boolean publishConfig(ConfigForm configForm, ConfigRequestInfo configRequestInfo, String encryptedDataKey)
-            throws NacosException {
-        
+    @SuppressWarnings("PMD.MethodTooLongRule")
+    public Boolean publishConfig(ConfigForm configForm, ConfigRequestInfo configRequestInfo, String encryptedDataKey) throws NacosException {
         Map<String, Object> configAdvanceInfo = getConfigAdvanceInfo(configForm);
         ParamUtils.checkParam(configAdvanceInfo);
         
@@ -95,15 +98,15 @@ public class ConfigOperationService {
         }
         configInfo.setType(configForm.getType());
         configInfo.setEncryptedDataKey(encryptedDataKey);
-        ConfigOperateResult configOperateResult;
         
         //beta publish
         if (StringUtils.isNotBlank(configRequestInfo.getBetaIps())) {
             configForm.setGrayName(BetaGrayRule.TYPE_BETA);
             configForm.setGrayRuleExp(configRequestInfo.getBetaIps());
             configForm.setGrayVersion(BetaGrayRule.VERSION);
-            configGrayModelMigrateService.persistBeta(configForm, configInfo, configRequestInfo);
+            configMigrateService.persistBeta(configForm, configInfo, configRequestInfo);
             configForm.setGrayPriority(Integer.MAX_VALUE);
+            configMigrateService.publishConfigGrayMigrate(BetaGrayRule.TYPE_BETA, configForm, configRequestInfo);
             publishConfigGray(BetaGrayRule.TYPE_BETA, configForm, configRequestInfo);
             return Boolean.TRUE;
         }
@@ -113,10 +116,15 @@ public class ConfigOperationService {
             configForm.setGrayRuleExp(configForm.getTag());
             configForm.setGrayVersion(TagGrayRule.VERSION);
             configForm.setGrayPriority(Integer.MAX_VALUE - 1);
-            configGrayModelMigrateService.persistTagv1(configForm, configInfo, configRequestInfo);
+            configMigrateService.persistTagv1(configForm, configInfo, configRequestInfo);
+            configMigrateService.publishConfigGrayMigrate(TagGrayRule.TYPE_TAG, configForm, configRequestInfo);
             publishConfigGray(TagGrayRule.TYPE_TAG, configForm, configRequestInfo);
             return Boolean.TRUE;
         }
+        
+        ConfigOperateResult configOperateResult;
+        
+        configMigrateService.publishConfigMigrate(configForm, configRequestInfo, configForm.getEncryptedDataKey());
         
         //formal publish
         if (StringUtils.isNotBlank(configRequestInfo.getCasMd5())) {
@@ -130,16 +138,36 @@ public class ConfigOperationService {
                         "Cas publish fail, server md5 may have changed.");
             }
         } else {
-            configOperateResult = configInfoPersistService.insertOrUpdate(configRequestInfo.getSrcIp(),
-                    configForm.getSrcUser(), configInfo, configAdvanceInfo);
+            if (configRequestInfo.getUpdateForExist()) {
+                configOperateResult = configInfoPersistService.insertOrUpdate(configRequestInfo.getSrcIp(),
+                        configForm.getSrcUser(), configInfo, configAdvanceInfo);
+            } else {
+                try {
+                    configOperateResult = configInfoPersistService.addConfigInfo(configRequestInfo.getSrcIp(),
+                            configForm.getSrcUser(), configInfo, configAdvanceInfo);
+                } catch (DataIntegrityViolationException ive) {
+                    LOGGER.warn("[publish-config-failed] config already exists. dataId: {}, group: {}, namespaceId: {}",
+                            configForm.getDataId(), configForm.getGroup(), configForm.getNamespaceId());
+                    throw new ConfigAlreadyExistsException(
+                            String.format("config already exist, dataId: %s, group: %s, namespaceId: %s",
+                                    configForm.getDataId(), configForm.getGroup(), configForm.getNamespaceId()));
+                }
+            }
         }
         ConfigChangePublisher.notifyConfigChange(
                 new ConfigDataChangeEvent(configForm.getDataId(), configForm.getGroup(), configForm.getNamespaceId(),
                         configOperateResult.getLastModified()));
+        if (ConfigTagUtil.isIstio(configForm.getConfigTags())) {
+            ConfigChangePublisher.notifyConfigChange(
+                    new IstioConfigChangeEvent(configForm.getDataId(), configForm.getGroup(), configForm.getNamespaceId(),
+                            configOperateResult.getLastModified(), configForm.getContent(),
+                            ConfigTagUtil.getIstioType(configForm.getConfigTags())));
+        }
         ConfigTraceService.logPersistenceEvent(configForm.getDataId(), configForm.getGroup(),
                 configForm.getNamespaceId(), configRequestInfo.getRequestIpApp(), configOperateResult.getLastModified(),
                 InetUtils.getSelfIP(), ConfigTraceService.PERSISTENCE_EVENT, ConfigTraceService.PERSISTENCE_TYPE_PUB,
                 configForm.getContent());
+        
         return true;
     }
     
@@ -239,14 +267,16 @@ public class ConfigOperationService {
      * Synchronously delete all pre-aggregation data under a dataId.
      */
     public Boolean deleteConfig(String dataId, String group, String namespaceId, String grayName, String clientIp,
-            String srcUser) {
+            String srcUser, String srcType) {
         String persistEvent = ConfigTraceService.PERSISTENCE_EVENT;
         if (StringUtils.isBlank(grayName)) {
             configInfoPersistService.removeConfigInfo(dataId, group, namespaceId, clientIp, srcUser);
+            configMigrateService.removeConfigInfoMigrate(dataId, group, namespaceId, clientIp, srcUser);
         } else {
             persistEvent = ConfigTraceService.PERSISTENCE_EVENT + "-" + grayName;
             configInfoGrayPersistService.removeConfigInfoGray(dataId, group, namespaceId, grayName, clientIp, srcUser);
-            configGrayModelMigrateService.deleteConfigGrayV1(dataId, group, namespaceId, grayName, clientIp, srcUser);
+            configMigrateService.deleteConfigGrayV1(dataId, group, namespaceId, grayName, clientIp, srcUser);
+            configMigrateService.removeConfigInfoGrayMigrate(dataId, group, namespaceId, grayName, clientIp, srcUser);
         }
         final Timestamp time = TimeUtils.getCurrentTime();
         ConfigTraceService.logPersistenceEvent(dataId, group, namespaceId, null, time.getTime(), clientIp, persistEvent,
