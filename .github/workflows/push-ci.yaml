@@ -36,9 +36,9 @@ jobs:
           distribution: "zulu"
           java-version: "17"
           architecture: x64
-          cache: "maven"
       - name: Build distribution tar
         run: |
+          mvn -B clean package apache-rat:check spotbugs:spotbugs -DskipTests -e -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
           mvn -Prelease-nacos -DskipTests clean install -U -e -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
       - uses: actions/upload-artifact@v4
         name: Upload distribution tar
