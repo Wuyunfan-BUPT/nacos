@@ -93,7 +93,7 @@ import static com.alibaba.nacos.persistence.repository.RowMapperManager.MAP_ROW_
  *
  * @author lixiaoshuang
  */
-@SuppressWarnings({"PMD.MethodReturnWrapperTypeRule", "checkstyle:linelength", "PMD.MethodTooLongRule"})
+@SuppressWarnings("checkstyle:linelength")
 @Conditional(value = ConditionOnEmbeddedStorage.class)
 @Service("embeddedConfigInfoPersistServiceImpl")
 public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistService {
@@ -168,6 +168,10 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
     
     @Override
     public String generateLikeArgument(String s) {
+        String underscore = "_";
+        if (s.contains(underscore)) {
+            s = s.replaceAll(underscore, "\\\\_");
+        }
         String fuzzySearchSign = "\\*";
         String sqlLikePercentSign = "%";
         if (s.contains(PATTERN_STR)) {
@@ -785,6 +789,13 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             Pair<String, String> pair = EncryptionHandler.decryptHandler(configInfo.getDataId(),
                     configInfo.getEncryptedDataKey(), configInfo.getContent());
             configInfo.setContent(pair.getSecond());
+            
+            // 查询并设置标签信息
+            List<String> configTagList = selectTagByConfig(configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant());
+            if (CollectionUtils.isNotEmpty(configTagList)) {
+                String configTagsStr = String.join(",", configTagList);
+                configInfo.setConfigTags(configTagsStr);
+            }
         }
         
         return page;
@@ -917,6 +928,13 @@ public class EmbeddedConfigInfoPersistServiceImpl implements ConfigInfoPersistSe
             Pair<String, String> pair = EncryptionHandler.decryptHandler(configInfo.getDataId(),
                     configInfo.getEncryptedDataKey(), configInfo.getContent());
             configInfo.setContent(pair.getSecond());
+            
+            // 查询并设置标签信息
+            List<String> configTagList = selectTagByConfig(configInfo.getDataId(), configInfo.getGroup(), configInfo.getTenant());
+            if (CollectionUtils.isNotEmpty(configTagList)) {
+                String configTagsStr = String.join(",", configTagList);
+                configInfo.setConfigTags(configTagsStr);
+            }
         }
         return page;
         

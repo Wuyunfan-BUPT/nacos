@@ -111,6 +111,18 @@ public final class WhereBuilder {
     }
     
     /**
+     * Build LIKE with escape.
+     *
+     * @param filed Filed name
+     * @param parameter Parameters
+     * @return Return {@link WhereBuilder}
+     */
+    public WhereBuilder likeWithEscape(String filed, Object parameter) {
+        where.append(filed).append(" LIKE ? ESCAPE '\\' ");
+        parameters.add(parameter);
+        return this;
+    }
+    /**
      * Build IN.
      *
      * @param filed Filed name
@@ -158,6 +170,17 @@ public final class WhereBuilder {
                 .append(startRow)
                 .append(Symbols.COMMA)
                 .append(pageSize);
+        return this;
+    }
+    
+    /**
+     * Build GROUP BY.
+     *
+     * @param fields Group by fields
+     * @return Return {@link WhereBuilder}
+     */
+    public WhereBuilder groupBy(String fields) {
+        where.append(" GROUP BY ").append(fields);
         return this;
     }
     

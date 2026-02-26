@@ -16,13 +16,15 @@
 
 package com.alibaba.nacos.api.ai.model.mcp.registry;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /** 
  * ServerVersionDetail.
  * 
  * @author xinluo
  */
-@SuppressWarnings({"checkstyle:MethodName", "checkstyle:ParameterName", "checkstyle:MemberName", 
-        "checkstyle:SummaryJavadoc", "PMD.LowerCamelCaseVariableNamingRule"})
+@SuppressWarnings({"checkstyle:MethodName", "checkstyle:ParameterName", "checkstyle:MemberName", "checkstyle:SummaryJavadoc"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServerVersionDetail {
 
     private String version;
